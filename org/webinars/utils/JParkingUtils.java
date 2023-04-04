@@ -24,12 +24,16 @@ public class JParkingUtils {
         return new Bus((String) data.get(0), (String) data.get(1), (Integer) data.get(2));
     }
 
+    public static String promptVehiclePlate(Scanner sc) {
+        System.out.print("Introduce el numero de matricula del vehiculo: ");
+        return sc.nextLine();
+    }
+
     private static ArrayList<Object> promptVehicleData(Scanner sc) {
         ArrayList<Object> data = new ArrayList<>();
         System.out.print("Introduce el modelo del vehiculo: ");
         data.add(sc.nextLine());
-        System.out.print("Introduce el numero de matricula del nuevo vehiculo: ");
-        data.add(sc.nextLine());
+        data.add(promptVehiclePlate(sc));
         return data;
     }
 

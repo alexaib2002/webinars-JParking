@@ -15,4 +15,9 @@ public class Bus extends Vehicle {
     public double calculatePricePerMinute() {
         return price + (0.25d * seats);
     }
+
+    @Override
+    public String toString() {
+        return String.format("(Bus) %s %s", calculatePricePerMinute(), super.toString());
+    }
 }

@@ -3,8 +3,12 @@ package org.webinars;
 import org.webinars.javabeans.Vehicle;
 import org.webinars.utils.JParkingUtils;
 
-import java.util.ArrayList;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class JParkingMain {
     public static final String MAIN_MENU = "===== JParking ===== \n" +
@@ -17,7 +21,9 @@ public class JParkingMain {
             "6. Imprimir la lista de vehiculos que hay en el parking\n" +
             "Introduzca la opcion seleccionada: ";
 
-    private static final ArrayList<Vehicle> parkedVehicles = new ArrayList<>();
+    public static final int MAX_CAPACITY = 100;
+
+    private static final HashMap<String, Vehicle> parkedVehicles = new HashMap<>(MAX_CAPACITY);
 
     public static void main(String[] args) {
         boolean execute = true;
@@ -31,13 +37,15 @@ public class JParkingMain {
                     case 2 -> delVehicle(sc);
                     case 3 -> countAvail();
                     case 4 -> parkingStatus();
-                    case 5 -> getDayEarnings();
+                    case 5 -> System.out.printf("Se han ingresado un total de %s€\n", getDayEarnings());
                     case 6 -> getVehicleList();
                     default -> System.err.println("Introduce una opcion valida");
                 }
             } catch (NumberFormatException e) {
                 System.err.println("La opcion debe ser un numero entre 0 y 6");
             }
+            System.out.print("Presiona RETURN...");
+            sc.nextLine();
         }
         sc.close();
     }
@@ -66,7 +74,8 @@ public class JParkingMain {
             case 3 -> vehicle = JParkingUtils.buildBus(sc);
             default -> throw new RuntimeException("Couldn't process option at vehicle creation");
         }
-        parkedVehicles.add(vehicle);
+        if (parkedVehicles.size() < MAX_CAPACITY)
+            parkedVehicles.put(vehicle.getPlate(), vehicle);
     }
 
     /**
@@ -74,35 +83,45 @@ public class JParkingMain {
      * @param sc Scanner to be used at user prompt
      */
     private static void delVehicle(Scanner sc) {
-
+        String plate = JParkingUtils.promptVehiclePlate(sc);
+        System.out.printf("El vehiculo sera eliminado del sistema:\n%s\n¿Proceder? (y/n)\n", parkedVehicles.get(plate));
+        if (sc.nextLine().equalsIgnoreCase("y"))
+            parkedVehicles.remove(plate);
     }
 
     /**
      * Prints number of parking spots available int the lot, or a message if the lot is full.
      */
     private static void countAvail() {
-
+        System.out.printf("Numero de vehiculos estacionados: %s/%s\n", parkedVehicles.size(), MAX_CAPACITY);
     }
 
     /**
      * Draws a map of the parking, marking occupied and free spots.
      */
     private static void parkingStatus() {
+        for (int i = 0; i < MAX_CAPACITY; i++) {
 
+        }
     }
 
     /**
      * Prints the earnings of the day, taking into account the entrance date of every existing vehicle in the lot and
      * their cost per minute.
      */
-    private static void getDayEarnings() {
-
+    private static double getDayEarnings() {
+        AtomicReference<Double> total = new AtomicReference<>((double) 0);
+        parkedVehicles.values().stream().forEach(vehicle -> {
+            Duration duration = Duration.between(vehicle.getEntryInstant(), Instant.now());
+            total.updateAndGet(v -> (v + vehicle.calculatePricePerMinute() * duration.toMinutes()));
+        });
+        return total.get();
     }
 
     /**
      * Prints all vehicle data into stdout.
      */
     private static void getVehicleList() {
-
+        // TODO implement me
     }
 }

@@ -13,4 +13,9 @@ public class Van extends Vehicle {
     public double calculatePricePerMinute() {
         return price + (0.2d * len);
     }
+
+    @Override
+    public String toString() {
+        return String.format("(Van) %s %s", calculatePricePerMinute(), super.toString());
+    }
 }
