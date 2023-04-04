@@ -5,9 +5,7 @@ import org.webinars.utils.JParkingUtils;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class JParkingMain {
@@ -23,7 +21,7 @@ public class JParkingMain {
 
     public static final int MAX_CAPACITY = 100;
 
-    private static final ArrayList<Vehicle> parkedVehicles = new ArrayList<>(MAX_CAPACITY);
+    private static final ArrayList<Vehicle> parkedVehicles = new ArrayList<>(Collections.nCopies(MAX_CAPACITY - 1, null));
 
     public static void main(String[] args) {
         boolean execute = true;
@@ -37,7 +35,7 @@ public class JParkingMain {
                     case 2 -> delVehicle(sc);
                     case 3 -> countAvail();
                     case 4 -> parkingStatus();
-                    case 5 -> System.out.printf("Se han ingresado un total de %s€\n", getDayEarnings());
+                    case 5 -> System.out.printf("Se han ingresado un total de %.2f€\n", getDayEarnings());
                     case 6 -> getVehicleList();
                     default -> System.err.println("Introduce una opcion valida");
                 }
@@ -75,8 +73,9 @@ public class JParkingMain {
             case 3 -> vehicle = JParkingUtils.buildBus(sc);
             default -> throw new RuntimeException("Couldn't process option at vehicle creation");
         }
-        if (parkedVehicles.size() < MAX_CAPACITY)
-            parkedVehicles.add(vehicle);
+        int pos = new Random().nextInt(MAX_CAPACITY - 1);
+        parkedVehicles.add(pos, vehicle);
+        System.out.printf("Nuevo vehiculo aparcado en la plaza %s\n", pos);
     }
 
     /**
@@ -87,7 +86,8 @@ public class JParkingMain {
         String plate = JParkingUtils.promptVehiclePlate(sc);
         try {
             System.out.printf("El vehiculo sera eliminado del sistema:\n%s\n¿Proceder? (y/n)\n",
-                    parkedVehicles.stream().filter(vehicle -> vehicle.getPlate().equals(plate)).findFirst().orElseThrow());
+                    parkedVehicles.stream().filter(Objects::nonNull)
+                            .filter(vehicle -> vehicle.getPlate().equals(plate)).findFirst().orElseThrow());
         } catch (NoSuchElementException e) {
             System.err.println("No se ha podido encontrar ningun vehiculo con la matricula indicada");
             return;
@@ -102,15 +102,23 @@ public class JParkingMain {
      * Prints number of parking spots available int the lot, or a message if the lot is full.
      */
     private static void countAvail() {
-        System.out.printf("Numero de vehiculos estacionados: %s/%s\n", parkedVehicles.size(), MAX_CAPACITY);
+        System.out.printf("Numero de vehiculos estacionados: %s/%s\n", parkedVehicles.stream().filter(Objects::nonNull).count(), MAX_CAPACITY);
     }
 
     /**
      * Draws a map of the parking, marking occupied and free spots.
      */
     private static void parkingStatus() {
-        for (int i = 0; i < MAX_CAPACITY; i++) {
-
+        int spot;
+        for (int i = 1; i <= 10; i++) {
+            for (int j = 1; j <= 10; j++) {
+                if (j % 2 == 0)
+                    spot = j * 10 - i + 1;
+                else
+                    spot = (j - 1) * 10 + i;
+                System.out.printf("%s\t:%s\t", spot, parkedVehicles.get(spot - 1) != null ? 'O' : '-');
+            }
+            System.out.println();
         }
     }
 
@@ -120,7 +128,7 @@ public class JParkingMain {
      */
     private static double getDayEarnings() {
         AtomicReference<Double> total = new AtomicReference<>((double) 0);
-        parkedVehicles.stream().forEach(vehicle -> {
+        parkedVehicles.stream().filter(Objects::nonNull).forEach(vehicle -> {
             Duration duration = Duration.between(vehicle.getEntryInstant(), Instant.now());
             total.updateAndGet(v -> (v + vehicle.calculatePricePerMinute() * duration.toMinutes()));
         });
@@ -131,6 +139,6 @@ public class JParkingMain {
      * Prints all vehicle data into stdout.
      */
     private static void getVehicleList() {
-        parkedVehicles.stream().forEach(System.out::println);
+        parkedVehicles.stream().filter(Objects::nonNull).forEach(System.out::println);
     }
 }

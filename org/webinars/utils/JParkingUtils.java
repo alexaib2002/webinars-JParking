@@ -40,14 +40,14 @@ public class JParkingUtils {
     private static ArrayList<Object> promptVanData(Scanner sc) {
         ArrayList<Object> data = promptVehicleData(sc);
         boolean valid = false;
-        try {
-            while (!valid) {
+        while (!valid) {
+            try {
                 System.out.print("Introduce la longitud de la furgoneta: ");
                 data.add(Double.parseDouble(sc.nextLine()));
                 valid = true;
+            } catch (NumberFormatException e) {
+                System.err.println("Introduce una longitud valida");
             }
-        } catch (NumberFormatException e) {
-            System.err.println("Introduce una longitud valida");
         }
         return data;
     }
@@ -55,14 +55,14 @@ public class JParkingUtils {
     private static ArrayList<Object> promptBusData(Scanner sc) {
         ArrayList<Object> data = promptVehicleData(sc);
         boolean valid = false;
-        try {
-            while (!valid) {
+        while (!valid) {
+            try {
                 System.out.print("Introduce el numero de asientos del autobus: ");
                 data.add(Integer.parseInt(sc.nextLine()));
                 valid = true;
+            } catch (NumberFormatException e) {
+                System.err.println("Introduce una longitud valida");
             }
-        } catch (NumberFormatException e) {
-            System.err.println("Introduce una longitud valida");
         }
         return data;
     }
