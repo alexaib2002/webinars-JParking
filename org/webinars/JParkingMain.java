@@ -5,7 +5,6 @@ import org.webinars.utils.JParkingUtils;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicReference;
@@ -122,6 +121,6 @@ public class JParkingMain {
      * Prints all vehicle data into stdout.
      */
     private static void getVehicleList() {
-        // TODO implement me
+        parkedVehicles.values().stream().forEach(System.out::println);
     }
 }
