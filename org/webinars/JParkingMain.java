@@ -5,7 +5,8 @@ import org.webinars.utils.JParkingUtils;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -22,7 +23,7 @@ public class JParkingMain {
 
     public static final int MAX_CAPACITY = 100;
 
-    private static final HashMap<String, Vehicle> parkedVehicles = new HashMap<>(MAX_CAPACITY);
+    private static final ArrayList<Vehicle> parkedVehicles = new ArrayList<>(MAX_CAPACITY);
 
     public static void main(String[] args) {
         boolean execute = true;
@@ -50,7 +51,8 @@ public class JParkingMain {
     }
 
     /**
-     * Generates a new vehicle and appends it to the parking ArrayList
+     * Generates a new vehicle and appends it to the parking ArrayList. It will randomly choose the position of the
+     * vehicle inside the parking.
      * @param sc Scanner to be used at user prompt
      */
     private static void addVehicle(Scanner sc) {
@@ -74,7 +76,7 @@ public class JParkingMain {
             default -> throw new RuntimeException("Couldn't process option at vehicle creation");
         }
         if (parkedVehicles.size() < MAX_CAPACITY)
-            parkedVehicles.put(vehicle.getPlate(), vehicle);
+            parkedVehicles.add(vehicle);
     }
 
     /**
@@ -83,9 +85,17 @@ public class JParkingMain {
      */
     private static void delVehicle(Scanner sc) {
         String plate = JParkingUtils.promptVehiclePlate(sc);
-        System.out.printf("El vehiculo sera eliminado del sistema:\n%s\n¿Proceder? (y/n)\n", parkedVehicles.get(plate));
+        try {
+            System.out.printf("El vehiculo sera eliminado del sistema:\n%s\n¿Proceder? (y/n)\n",
+                    parkedVehicles.stream().filter(vehicle -> vehicle.getPlate().equals(plate)).findFirst().orElseThrow());
+        } catch (NoSuchElementException e) {
+            System.err.println("No se ha podido encontrar ningun vehiculo con la matricula indicada");
+            return;
+        }
         if (sc.nextLine().equalsIgnoreCase("y"))
             parkedVehicles.remove(plate);
+        else
+            System.out.println("Operacion cancelada");
     }
 
     /**
@@ -110,7 +120,7 @@ public class JParkingMain {
      */
     private static double getDayEarnings() {
         AtomicReference<Double> total = new AtomicReference<>((double) 0);
-        parkedVehicles.values().stream().forEach(vehicle -> {
+        parkedVehicles.stream().forEach(vehicle -> {
             Duration duration = Duration.between(vehicle.getEntryInstant(), Instant.now());
             total.updateAndGet(v -> (v + vehicle.calculatePricePerMinute() * duration.toMinutes()));
         });
@@ -121,6 +131,6 @@ public class JParkingMain {
      * Prints all vehicle data into stdout.
      */
     private static void getVehicleList() {
-        parkedVehicles.values().stream().forEach(System.out::println);
+        parkedVehicles.stream().forEach(System.out::println);
     }
 }
